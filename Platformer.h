@@ -26,6 +26,17 @@ constexpr unsigned int STAGE_HEIGHT  = 16;
 
 class Platformer : public olc::PixelGameEngine
 {
+private:
+	Player player;
+	bool onGround = false;
+
+	//controls FPS Variables and Functions
+	float fTargetFrameTime = 1.0f / 100.0f; // Virtual FPS of 100fps
+	float fAccumulatedTime = 0.0f;
+
+	// Collisions and Physics
+	float gravity = 8.7f;
+
 public:
 	Platformer()
 	{
@@ -46,7 +57,7 @@ public:
 
 		DrawScreen();
 
-		DrawPLayer();
+		DrawPlayer();
 
 		PlayerFunctions(fElapsedTime);
 
@@ -88,8 +99,15 @@ public:
 	{
 		if (GetKey(olc::Key::RIGHT).bHeld) player.dx += player.acceleration;
 		if (GetKey(olc::Key::LEFT).bHeld)  player.dx -= player.acceleration;
-		if (GetKey(olc::Key::SPACE).bPressed) player.dy -= player.jump;
+
+		// Player Jump
+		if (GetKey(olc::Key::SPACE).bPressed && onGround && player.dy < 75.0f) 
+		{
+			player.dy -= player.jump;
+			onGround = false;
+		}
 		
+		// Applyer player physics
 		player.dy += gravity;
 		player.dx = std::clamp(player.dx, -200.0f, 200.0f);
 		player.dy = std::clamp(player.dy, -200.0f, 200.0f);
@@ -103,7 +121,7 @@ public:
 		if (player.dx != 0) player.dx *= player.dessaceleration;
 	}
 
-	void DrawPLayer()
+	void DrawPlayer()
 	{
 		FillRect((int)player.x, (int)player.y, TILE_WIDTH, TILE_HEIGHT);
 	}
@@ -123,21 +141,12 @@ public:
 	}
 
 private:
-	Player player;
-
-	//controls FPS Variables and Functions
-	float fTargetFrameTime = 1.0f / 100.0f; // Virtual FPS of 100fps
-	float fAccumulatedTime = 0.0f;
-
-	// Collisions and Physics
-	float gravity = 8.7;
-
 	void Collision(float adjustX, float adjustY, float moveToX, float moveToY)
 	{
-		int playerToMapPosX = (player.x / 8) + adjustX / 8;
-		int playerToMapPosY = (player.y / 8) + adjustY / 8;
+		int playerToMapPosX = int((player.x / 8) + adjustX / 8);
+		int playerToMapPosY = int((player.y / 8) + adjustY / 8);
 
-		FillRect(player.x + adjustX, player.y + adjustY, 1, 1, olc::RED);
+		FillRect(int(player.x + adjustX), int(player.y + adjustY), 1, 1, olc::RED);
 
 		playerToMapPosX = std::clamp(playerToMapPosX, 0, 15);
 		playerToMapPosY = std::clamp(playerToMapPosY, 0, 15);
@@ -146,12 +155,29 @@ private:
 		{
 			player.x += moveToX;
 			player.y += moveToY;
+
+			if (moveToY < 0)
+			{
+				onGround = true;
+			}
 			
-			if (moveToX != 0) player.dx = 0;
-			if (moveToY != 0) player.dy = 0;
+			if (moveToX != 0) 
+			{
+				player.dx = 0;
+			}
+			if (moveToY != 0) 
+			{
+				player.dy = 0;
+			}
 			
-			if (moveToX != 0) playerToMapPosX = (player.x / 8);
-			if (moveToY != 0) playerToMapPosY = (player.y / 8);
+			if (moveToX != 0) 
+			{
+				playerToMapPosX = (player.x / 8);
+			}
+			if (moveToY != 0) 
+			{
+				playerToMapPosY = (player.y / 8);
+			}
 		}
 	}
 
