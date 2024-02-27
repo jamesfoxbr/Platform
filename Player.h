@@ -11,9 +11,9 @@ public:
 	float y;
 	float dx;
 	float dy;
-	float acceleration = 4.0f;
+	float acceleration = 8.0f;
 	float dessaceleration = 0.9f;
-	float jump = 10.0f;
+	float jump = 200.0f;
 
 public:
 	Player(float x, float y)

@@ -75,36 +75,32 @@ public:
 	{
 		MovePlayer(fElapsedTime);
 		Dessacelerate(fElapsedTime);
-		Collision(7, 0, 1, 0);
+		
+		Collision(2, 7, 0, -1); // Left Foot
+		Collision(5, 7, 0, -1); // Right Foot
+		Collision(0, 4, 1,  0); // Right Side  
+		Collision(7, 4, -1, 0); // Left Side  
+		Collision(3, 0, 0,  1); // Head 
+		Collision(4, 0, 0,  1); // Head  
 	}
 
 	void MovePlayer(float fElapsedTime)
 	{
 		if (GetKey(olc::Key::RIGHT).bHeld) player.dx += player.acceleration;
 		if (GetKey(olc::Key::LEFT).bHeld)  player.dx -= player.acceleration;
-		if (GetKey(olc::Key::DOWN).bHeld)  player.dy += player.acceleration;
-		if (GetKey(olc::Key::UP).bHeld)    player.dy -= player.acceleration;
-
-		ClampPLayerToScreen();
-
-		// Max speed
-		player.dx = std::clamp(player.dx, -50.0f, 50.0f);
-		player.dy = std::clamp(player.dy, -50.0f, 50.0f);
+		if (GetKey(olc::Key::SPACE).bPressed) player.dy -= player.jump;
+		
+		player.dy += gravity;
+		player.dx = std::clamp(player.dx, -200.0f, 200.0f);
+		player.dy = std::clamp(player.dy, -200.0f, 200.0f);
 
 		player.x += player.dx * fElapsedTime;
 		player.y += player.dy * fElapsedTime;
 	}
 
-	void ClampPLayerToScreen()
-	{
-		player.x = std::clamp(player.x, 0.0f, 127.0f - TILE_WIDTH);
-	}
-
 	void Dessacelerate(float fElapsedTime)
 	{
 		if (player.dx != 0) player.dx *= player.dessaceleration;
-		if (player.dy != 0) player.dy *= player.dessaceleration;
-
 	}
 
 	void DrawPLayer()
@@ -133,7 +129,9 @@ private:
 	float fTargetFrameTime = 1.0f / 100.0f; // Virtual FPS of 100fps
 	float fAccumulatedTime = 0.0f;
 
-	// Collisions
+	// Collisions and Physics
+	float gravity = 8.7;
+
 	void Collision(float adjustX, float adjustY, float moveToX, float moveToY)
 	{
 		int playerToMapPosX = (player.x / 8) + adjustX / 8;
@@ -141,29 +139,39 @@ private:
 
 		FillRect(player.x + adjustX, player.y + adjustY, 1, 1, olc::RED);
 
-		if (stage[playerToMapPosY][playerToMapPosX] == 1)
+		playerToMapPosX = std::clamp(playerToMapPosX, 0, 15);
+		playerToMapPosY = std::clamp(playerToMapPosY, 0, 15);
+
+		while (stage[playerToMapPosY][playerToMapPosX] == 1)
 		{
-			player.x += 1.0f;
+			player.x += moveToX;
+			player.y += moveToY;
+			
+			if (moveToX != 0) player.dx = 0;
+			if (moveToY != 0) player.dy = 0;
+			
+			if (moveToX != 0) playerToMapPosX = (player.x / 8);
+			if (moveToY != 0) playerToMapPosY = (player.y / 8);
 		}
 	}
 
 	// Crete stage
 	std::vector<std::vector<int>> stage =
 	{
-		{1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 1
+		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 1
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 2
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 3
-		{0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 4
-		{0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 5
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 6
-		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 7
+		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 4
+		{1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1}, // 5
+		{1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 6
+		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 7
 		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 8
-		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 9
+		{1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1}, // 9
 		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 10
 		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 11
-		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 12
-		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 13
-		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 14
+		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1}, // 12
+		{1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1}, // 13
+		{1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}, // 14
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 15
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 16
 	};
