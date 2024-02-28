@@ -2,10 +2,10 @@
 
 void Platformer::CameraMove()
 {
-	int left  = int(player.x - ScreenWidth()  * 0.6f);
-	int right = int(player.x - ScreenWidth()  * 0.4f);
-	int down  = int(player.y - ScreenHeight() * 0.8f);
-	int top   = int(player.y - ScreenHeight() * 0.2f);
+	float left  = player.x - ScreenWidth()  * 0.6f;
+	float right = player.x - ScreenWidth()  * 0.4f;
+	float down  = player.y - ScreenHeight() * 0.8f;
+	float top   = player.y - ScreenHeight() * 0.2f;
 
 	while (left > camera.x)
 	{
@@ -28,7 +28,7 @@ void Platformer::CameraMove()
 		camera.offsetY -= camera.speed;
 	}
 
-	DrawRect(camera.x - camera.offsetX + int(ScreenWidth() * 0.4f), camera.y - camera.offsetY + int(ScreenHeight() * 0.2f), ScreenWidth() - int(ScreenWidth() * 0.8f) + TILE_WIDTH, ScreenHeight() - int(ScreenHeight() * 0.4f) + TILE_HEIGHT);
+	//DrawRect(camera.x - camera.offsetX + int(ScreenWidth() * 0.4f), camera.y - camera.offsetY + int(ScreenHeight() * 0.2f), ScreenWidth() - int(ScreenWidth() * 0.8f) + TILE_WIDTH, ScreenHeight() - int(ScreenHeight() * 0.4f) + TILE_HEIGHT);
 }
 
 void Platformer::DrawScreen()
@@ -46,10 +46,10 @@ void Platformer::MakeStage()
 			switch (stage[y][x])
 			{
 			case 1:
-				FillRect(x * TILE_WIDTH - camera.x, y * TILE_HEIGHT - camera.y, TILE_WIDTH, TILE_HEIGHT, olc::DARK_YELLOW);
+				FillRect(x * TILE_WIDTH - int(camera.x), y * TILE_HEIGHT - int(camera.y), TILE_WIDTH, TILE_HEIGHT, olc::DARK_YELLOW);
 				break;
 			case 2:
-				FillRect(x * TILE_WIDTH - camera.x, y * TILE_HEIGHT - camera.y, TILE_WIDTH, TILE_HEIGHT, olc::DARK_BLUE);
+				FillRect(x * TILE_WIDTH - int(camera.x), y * TILE_HEIGHT - int(camera.y), TILE_WIDTH, TILE_HEIGHT, olc::DARK_BLUE);
 				break;
 			default:
 				break;
@@ -65,8 +65,8 @@ void Platformer::PlayerFunctions(float fElapsedTime)
 	Dessacelerate(fElapsedTime);
 
 	// Player collision points
-	Collision(3, 7, 0, -1, olc::GREEN);  // Left Foot
-	Collision(4, 7, 0, -1, olc::GREEN);  // Right Foot
+	Collision(2, 7, 0, -1, olc::GREEN);  // Left Foot
+	Collision(5, 7, 0, -1, olc::GREEN);  // Right Foot
 	Collision(0, 4, 1, 0, olc::RED);    // Right Side  
 	Collision(7, 4, -1, 0, olc::RED);    // Left Side
 	Collision(3, 0, 0, 1, olc::BLUE);   // Head 
@@ -88,12 +88,14 @@ void Platformer::MovePlayer(float fElapsedTime)
 	// Player Jump
 	if (GetKey(olc::Key::SPACE).bPressed && onGround && player.dy < 75.0f)
 	{
+		player.dy = 0;
 		player.dy -= player.jump;
 		onGround = false;
 	}
 
 	// Applyer player physics
-	player.dy += gravity;
+	player.dy += gravity;	
+
 	player.dx = std::clamp(player.dx, -200.0f, 200.0f);
 	player.dy = std::clamp(player.dy, -200.0f, 200.0f);
 
@@ -111,7 +113,7 @@ void Platformer::Dessacelerate(float fElapsedTime)
 
 void Platformer::DrawPlayer()
 {
-	FillRect((int)player.x - camera.x, (int)player.y - camera.y, TILE_WIDTH, TILE_HEIGHT);
+	FillRect(int(player.x - camera.x), int(player.y - camera.y), TILE_WIDTH, TILE_HEIGHT);
 }
 
 bool Platformer::ControlFrameRate(float fElapsedTime)
@@ -168,5 +170,5 @@ void Platformer::Collision(float adjustX, float adjustY, float moveToX, float mo
 	}
 
 	// Draw collision points
-	FillRect(int(player.x + adjustX - camera.x), int(player.y + adjustY - camera.y), 1, 1, color);
+	//FillRect(int(player.x + adjustX - camera.x), int(player.y + adjustY - camera.y), 1, 1, color);
 }

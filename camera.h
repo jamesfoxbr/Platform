@@ -4,11 +4,11 @@
 class Camera
 {
 public:
-	int x = 0;
-	int y = 0;
-	int speed = 1;
-	int offsetX = 0;
-	int offsetY = 0;
+	float x = 0;
+	float y = 0;
+	float speed = 1;
+	float offsetX = 0;
+	float offsetY = 0;
 };
 
 #endif
