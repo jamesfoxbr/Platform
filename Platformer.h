@@ -28,14 +28,14 @@ class Platformer : public olc::PixelGameEngine
 {
 private:
 	Player player;
-	bool onGround = false;
-
+	
 	//controls FPS Variables and Functions
 	float fTargetFrameTime = 1.0f / 100.0f; // Virtual FPS of 100fps
 	float fAccumulatedTime = 0.0f;
 
 	// Collisions and Physics
 	float gravity = 8.7f;
+	bool onGround = false;
 
 public:
 	Platformer()
@@ -45,8 +45,8 @@ public:
 
 	bool OnUserCreate() override
 	{
-		player.x = 63;
-		player.y = 63;
+		player.x = 63.0f;
+		player.y = 63.0f;
 
 		return true;
 	}
@@ -56,8 +56,6 @@ public:
 		ControlFrameRate(fElapsedTime);
 
 		DrawScreen();
-
-		DrawPlayer();
 
 		PlayerFunctions(fElapsedTime);
 
@@ -84,21 +82,30 @@ public:
 
 	void PlayerFunctions(float fElapsedTime)
 	{
+		DrawPlayer();
 		MovePlayer(fElapsedTime);
 		Dessacelerate(fElapsedTime);
 		
-		Collision(2, 7, 0, -1); // Left Foot
-		Collision(5, 7, 0, -1); // Right Foot
-		Collision(0, 4, 1,  0); // Right Side  
-		Collision(7, 4, -1, 0); // Left Side  
-		Collision(3, 0, 0,  1); // Head 
-		Collision(4, 0, 0,  1); // Head  
+		// Player collision points
+		Collision(3, 7, 0, -1, olc::GREEN);  // Left Foot
+		Collision(4, 7, 0, -1, olc::GREEN);  // Right Foot
+		Collision(0, 4, 1,  0, olc::RED);    // Right Side  
+		Collision(7, 4, -1, 0, olc::RED);    // Left Side
+		Collision(3, 0, 0,  1, olc::BLUE);   // Head 
+		Collision(4, 0, 0,  1, olc::BLUE);   // Head 
 	}
 
 	void MovePlayer(float fElapsedTime)
 	{
-		if (GetKey(olc::Key::RIGHT).bHeld) player.dx += player.acceleration;
-		if (GetKey(olc::Key::LEFT).bHeld)  player.dx -= player.acceleration;
+		// Player running movement
+		if (GetKey(olc::Key::RIGHT).bHeld) 
+		{
+			player.dx += player.acceleration;
+		}
+		if (GetKey(olc::Key::LEFT).bHeld)  
+		{
+			player.dx -= player.acceleration;
+		}
 
 		// Player Jump
 		if (GetKey(olc::Key::SPACE).bPressed && onGround && player.dy < 75.0f) 
@@ -118,7 +125,10 @@ public:
 
 	void Dessacelerate(float fElapsedTime)
 	{
-		if (player.dx != 0) player.dx *= player.dessaceleration;
+		if (player.dx != 0) 
+		{
+			player.dx *= player.dessaceleration;
+		}
 	}
 
 	void DrawPlayer()
@@ -141,20 +151,24 @@ public:
 	}
 
 private:
-	void Collision(float adjustX, float adjustY, float moveToX, float moveToY)
+	void Collision(float adjustX, float adjustY, float moveToX, float moveToY, olc::Pixel color = olc::RED)
 	{
 		int playerToMapPosX = int((player.x / 8) + adjustX / 8);
 		int playerToMapPosY = int((player.y / 8) + adjustY / 8);
-
-		FillRect(int(player.x + adjustX), int(player.y + adjustY), 1, 1, olc::RED);
 
 		playerToMapPosX = std::clamp(playerToMapPosX, 0, 15);
 		playerToMapPosY = std::clamp(playerToMapPosY, 0, 15);
 
 		while (stage[playerToMapPosY][playerToMapPosX] == 1)
 		{
-			player.x += moveToX;
+			// Break blocks
+			if (player.dy < 0 && color == olc::BLUE)
+			{
+				stage[playerToMapPosY][playerToMapPosX] = 0;
+			}
+
 			player.y += moveToY;
+			player.x += moveToX;
 
 			if (moveToY < 0)
 			{
@@ -164,24 +178,20 @@ private:
 			if (moveToX != 0) 
 			{
 				player.dx = 0;
+				playerToMapPosX = int(player.x / 8);
 			}
 			if (moveToY != 0) 
 			{
 				player.dy = 0;
-			}
-			
-			if (moveToX != 0) 
-			{
-				playerToMapPosX = (player.x / 8);
-			}
-			if (moveToY != 0) 
-			{
-				playerToMapPosY = (player.y / 8);
+				playerToMapPosY = int(player.y / 8);
 			}
 		}
+
+		// Draw collision points
+		FillRect(int(player.x + adjustX), int(player.y + adjustY), 1, 1, color);
 	}
 
-	// Crete stage
+	// Create stage
 	std::vector<std::vector<int>> stage =
 	{
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 1
