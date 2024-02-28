@@ -73,6 +73,12 @@ public:
 		return true;
 	}
 
+	bool OnUserDestroy() override
+	{
+		// Called when window is closed
+		return true;
+	}
+
 	void CameraMove();
 
 	void DrawScreen();	
