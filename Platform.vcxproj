@@ -130,9 +130,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Platformer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Platformer.h" />
     <ClInclude Include="Player.h" />
   </ItemGroup>

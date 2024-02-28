@@ -5,6 +5,7 @@
 #include "olcPixelGameEngine.h"
 
 #include "Player.h"
+#include "camera.h"
 
 #include <iostream>
 #include <algorithm>
@@ -14,11 +15,9 @@
 constexpr unsigned int  TILE_WIDTH   = 8;
 constexpr unsigned int  TILE_HEIGHT  = 8;
 
-constexpr unsigned int SCREEN_WIDTH  = 128;
-constexpr unsigned int SCREEN_HEIGHT = 128;
+constexpr unsigned int SCREEN_WIDTH  = 256;
+constexpr unsigned int SCREEN_HEIGHT = 180;
 
-constexpr unsigned int STAGE_WIDTH   = 16;
-constexpr unsigned int STAGE_HEIGHT  = 16;
 
 //////////////////////////////////////////////////////////////////////////
 //                        PLATFORM CLASS                                //
@@ -28,6 +27,7 @@ class Platformer : public olc::PixelGameEngine
 {
 private:
 	Player player;
+	Camera camera;
 	
 	//controls FPS Variables and Functions
 	float fTargetFrameTime = 1.0f / 100.0f; // Virtual FPS of 100fps
@@ -36,6 +36,10 @@ private:
 	// Collisions and Physics
 	float gravity = 8.7f;
 	bool onGround = false;
+
+	// Stage
+	int stageRows;
+	int stageColumns;
 
 public:
 	Platformer()
@@ -48,6 +52,12 @@ public:
 		player.x = 63.0f;
 		player.y = 63.0f;
 
+		stageRows    = int(stage.size());
+		stageColumns = int(stage[0].size());
+
+		std::cout << "Rows: " << stage.size() << std::endl;
+		std::cout << "Columns: " << stage[0].size() << std::endl;
+
 		return true;
 	}
 
@@ -59,8 +69,12 @@ public:
 
 		PlayerFunctions(fElapsedTime);
 
+		CameraMove();
+
 		return true;
 	}
+
+	void CameraMove();
 
 	void DrawScreen()
 	{
@@ -70,12 +84,21 @@ public:
 
 	void MakeStage()
 	{
-		for (int y = 0; y < STAGE_HEIGHT; y++)
+		for (int y = 0; y < stageRows; y++)
 		{
-			for (int x = 0; x < STAGE_WIDTH; x++)
+			for (int x = 0; x < stageColumns; x++)
 			{
-				if (stage[y][x] == 1)
-					FillRect(x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, olc::DARK_YELLOW);
+				switch (stage[y][x])
+				{
+				case 1:
+					FillRect(x * TILE_WIDTH - camera.x, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, olc::DARK_YELLOW);
+					break;
+				case 2:
+					FillRect(x * TILE_WIDTH - camera.x, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, olc::DARK_BLUE);
+					break;
+				default:
+					break;
+				}
 			}
 		}
 	}
@@ -133,7 +156,7 @@ public:
 
 	void DrawPlayer()
 	{
-		FillRect((int)player.x, (int)player.y, TILE_WIDTH, TILE_HEIGHT);
+		FillRect((int)player.x - camera.x, (int)player.y, TILE_WIDTH, TILE_HEIGHT);
 	}
 
 	bool ControlFrameRate(float fElapsedTime)
@@ -156,19 +179,22 @@ private:
 		int playerToMapPosX = int((player.x / 8) + adjustX / 8);
 		int playerToMapPosY = int((player.y / 8) + adjustY / 8);
 
-		if (playerToMapPosX >= 0 && playerToMapPosX <= 15 && playerToMapPosY >= 0 && playerToMapPosY <= 15)
+		// This if statement is to avoid the vector go out of fluffyness (bounds)
+		if (playerToMapPosX >= 0 && playerToMapPosX < stageColumns && playerToMapPosY >= 0 && playerToMapPosY < stageRows)
 		{
-			while (stage.at(playerToMapPosY).at(playerToMapPosX) == 1)
+			while (stage.at(playerToMapPosY).at(playerToMapPosX) > 0)
 			{
 				// Break blocks
-				if (player.dy < 0 && color == olc::BLUE)
+				if (player.dy < 0 && color == olc::BLUE && stage.at(playerToMapPosY).at(playerToMapPosX) == 1)
 				{
 					stage.at(playerToMapPosY).at(playerToMapPosX) = 0;
 				}
 
+				// Correct player position after detec collision
 				player.y += moveToY;
 				player.x += moveToX;
 
+				// Detects if the player is touching the ground
 				if (moveToY < 0)
 				{
 					onGround = true;
@@ -188,28 +214,28 @@ private:
 		}
 
 		// Draw collision points
-		FillRect(int(player.x + adjustX), int(player.y + adjustY), 1, 1, color);
+		FillRect(int(player.x + adjustX - camera.x), int(player.y + adjustY), 1, 1, color);
 	}
 
 	// Create stage
 	std::vector<std::vector<int>> stage =
 	{
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 1
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 2
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 3
-		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 4
-		{1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1}, // 5
-		{1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 6
-		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 7
-		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 8
-		{1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1}, // 9
-		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 10
-		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 11
-		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1}, // 12
-		{1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1}, // 13
-		{1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}, // 14
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // 15
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 16
+		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 1
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 2
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 3
+		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 4
+		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1}, // 5
+		{1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 6
+		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 7
+		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 8
+		{1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1}, // 9
+		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 10
+		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 11
+		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1}, // 12
+		{1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1}, // 13
+		{1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}, // 14
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // 15
+		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 16
 	};
 };
 
