@@ -156,34 +156,34 @@ private:
 		int playerToMapPosX = int((player.x / 8) + adjustX / 8);
 		int playerToMapPosY = int((player.y / 8) + adjustY / 8);
 
-		playerToMapPosX = std::clamp(playerToMapPosX, 0, 15);
-		playerToMapPosY = std::clamp(playerToMapPosY, 0, 15);
-
-		while (stage[playerToMapPosY][playerToMapPosX] == 1)
+		if (playerToMapPosX >= 0 && playerToMapPosX <= 15 && playerToMapPosY >= 0 && playerToMapPosY <= 15)
 		{
-			// Break blocks
-			if (player.dy < 0 && color == olc::BLUE)
+			while (stage.at(playerToMapPosY).at(playerToMapPosX) == 1)
 			{
-				stage[playerToMapPosY][playerToMapPosX] = 0;
-			}
+				// Break blocks
+				if (player.dy < 0 && color == olc::BLUE)
+				{
+					stage.at(playerToMapPosY).at(playerToMapPosX) = 0;
+				}
 
-			player.y += moveToY;
-			player.x += moveToX;
+				player.y += moveToY;
+				player.x += moveToX;
 
-			if (moveToY < 0)
-			{
-				onGround = true;
-			}
-			
-			if (moveToX != 0) 
-			{
-				player.dx = 0;
-				playerToMapPosX = int(player.x / 8);
-			}
-			if (moveToY != 0) 
-			{
-				player.dy = 0;
-				playerToMapPosY = int(player.y / 8);
+				if (moveToY < 0)
+				{
+					onGround = true;
+				}
+
+				if (moveToX != 0)
+				{
+					player.dx = 0;
+					playerToMapPosX = int(player.x / 8);
+				}
+				if (moveToY != 0)
+				{
+					player.dy = 0;
+					playerToMapPosY = int(player.y / 8);
+				}
 			}
 		}
 
@@ -208,7 +208,7 @@ private:
 		{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1}, // 12
 		{1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1}, // 13
 		{1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}, // 14
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 15
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // 15
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 16
 	};
 };
