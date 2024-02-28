@@ -1,7 +1,6 @@
 #ifndef _PLATFORMER_H_
 #define _PLATFORMER_H_
 
-#define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
 #include "Player.h"
