@@ -1,5 +1,18 @@
 #include "Platformer.h"
 
+void Platformer::UserInterface()
+{
+	if (GetKey(olc::Key::ENTER).bPressed) 
+	{
+		paused = !paused;
+	}
+
+	if (paused)
+	{
+		DrawString(int(ScreenWidth() * 0.4f), int(ScreenHeight() * 0.4f), "PAUSED", olc::YELLOW, 1);
+	}
+}
+
 void Platformer::CameraMove()
 {
 	float left  = player.x - ScreenWidth()  * 0.6f;

@@ -27,6 +27,8 @@ class Platformer : public olc::PixelGameEngine
 private:
 	Player player;
 	Camera camera;
+
+	bool paused = false;
 	
 	//controls FPS Variables and Functions
 	float fTargetFrameTime = 1.0f / 100.0f; // Virtual FPS of 100fps
@@ -62,6 +64,13 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		UserInterface();
+
+		if (paused)
+		{
+			return true;
+		}
+
 		ControlFrameRate(fElapsedTime);
 
 		DrawScreen();
@@ -78,6 +87,8 @@ public:
 		// Called when window is closed
 		return true;
 	}
+
+	void UserInterface();
 
 	void CameraMove();
 
